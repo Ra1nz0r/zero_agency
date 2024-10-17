@@ -3,9 +3,7 @@ package server
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,8 +14,7 @@ import (
 	"github.com/Ra1nz0r/zero_agency/internal/config"
 	"github.com/Ra1nz0r/zero_agency/internal/logger"
 	srv "github.com/Ra1nz0r/zero_agency/internal/services"
-	"github.com/go-chi/chi/v5"
-	httpSwagger "github.com/swaggo/http-swagger"
+	"github.com/gofiber/fiber/v3"
 )
 
 // Run запускает сервер.
@@ -67,44 +64,30 @@ func Run() {
 		}
 	}
 
-	logger.Zap.Debug("Running handlers.")
-
-	// Создаём router и endpoints.
-	r := chi.NewRouter()
-
-	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("doc.json"),
-	))
-
-	/* r.Group(func(r chi.Router) { // исправить эндпойнты на другие
-		r.Use(queries.WithRequestDetails)
-
-		r.Delete("/library/delete", queries.DeleteSong)
-		r.Post("/library/add", queries.AddSongInLibrary)
-		r.Put("/library/update", queries.UpdateSong)
+	logger.Zap.Debug("Configuring and starting the server.")
+	// Конфигурируем и запускаем сервер.
+	srv := fiber.New(fiber.Config{
+		CaseSensitive: true,
+		StrictRouting: true,
+		AppName:       "News App v1.0.1",
+		ReadTimeout:   5 * time.Second,
+		WriteTimeout:  10 * time.Second,
+		IdleTimeout:   120 * time.Second,
 	})
 
-	r.Group(func(r chi.Router) {
-		r.Use(queries.WithResponseDetails)
+	//srv.Use(swagger.New())
+	logger.Zap.Debug("Running handlers.")
 
-		r.Get("/library/list", queries.ListSongsWithFilters)
-		r.Get("/song/couplet", queries.TextSongWithPagination)
-	}) */
-
-	logger.Zap.Debug("Configuring and starting the server.")
-
-	// Конфигурируем и запускаем сервер.
-	srv := http.Server{
-		Addr:         cfg.ServerHost,
-		Handler:      r,
-		ReadTimeout:  5 * time.Minute,
-		WriteTimeout: 5 * time.Minute,
-	}
+	// GET /api/register
+	srv.Get("/api/*", func(c fiber.Ctx) error {
+		msg := fmt.Sprintf("✋ %s", c.Params("*"))
+		return c.SendString(msg) // => ✋ register
+	})
 
 	logger.Zap.Info(fmt.Sprintf("Server is running on: '%s'", cfg.ServerHost))
 
 	go func() {
-		if errListn := srv.ListenAndServe(); !errors.Is(errListn, http.ErrServerClosed) {
+		if errListn := srv.Listen(cfg.ServerHost); errListn != nil {
 			logger.Zap.Fatal(fmt.Errorf("HTTP server error: %w", errListn))
 		}
 		logger.Zap.Info("Stopped serving new connections.")
@@ -117,7 +100,7 @@ func Run() {
 	shutdownCtx, shutdownRelease := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownRelease()
 
-	if errShut := srv.Shutdown(shutdownCtx); errShut != nil {
+	if errShut := srv.ShutdownWithContext(shutdownCtx); errShut != nil {
 		logger.Zap.Fatal(fmt.Errorf("HTTP shutdown error: %w", errShut))
 	}
 	logger.Zap.Info("Graceful shutdown complete.")
