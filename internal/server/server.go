@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"os"
 	"os/signal"
@@ -11,6 +10,7 @@ import (
 
 	"fmt"
 
+	"github.com/Ra1nz0r/zero_agency/db"
 	"github.com/Ra1nz0r/zero_agency/internal/config"
 	"github.com/Ra1nz0r/zero_agency/internal/logger"
 	srv "github.com/Ra1nz0r/zero_agency/internal/services"
@@ -19,6 +19,7 @@ import (
 
 // Run запускает сервер.
 func Run() {
+	logger.Zap.Debug()
 	// Загружаем переменные окружения из '.env' файла.
 	cfg, errLoad := config.LoadConfig(".")
 	if errLoad != nil {
@@ -30,18 +31,8 @@ func Run() {
 		log.Fatal(fmt.Errorf("failed to initialize the logger: %w", errLog))
 	}
 
-	// Конфигурируем путь для подключения к PostgreSQL.
-	dbURL := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
-		cfg.DatabaseUser,
-		cfg.DatabasePassword,
-		cfg.DatabaseHost,
-		cfg.DatabasePort,
-		cfg.DatabaseName,
-	)
-
 	logger.Zap.Debug("Connecting to the database.")
-	// Открываем подключение к базе данных.
-	connect, errConn := sql.Open(cfg.DatabaseDriver, dbURL)
+	connect, dbURL, errConn := db.Connect(&cfg)
 	if errConn != nil {
 		logger.Zap.Fatal(fmt.Errorf("unable to create connection to database: %w", errConn))
 	}
@@ -69,7 +60,7 @@ func Run() {
 	srv := fiber.New(fiber.Config{
 		CaseSensitive: true,
 		StrictRouting: true,
-		AppName:       "News App v1.0.1",
+		AppName:       "News App v1.0.0",
 		ReadTimeout:   5 * time.Second,
 		WriteTimeout:  10 * time.Second,
 		IdleTimeout:   120 * time.Second,
