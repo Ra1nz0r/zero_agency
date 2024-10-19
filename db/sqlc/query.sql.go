@@ -11,65 +11,66 @@ import (
 	"github.com/lib/pq"
 )
 
-const deleteNewsCategories = `-- name: DeleteNewsCategories :exec
+const deleteCategories = `-- name: DeleteCategories :exec
 DELETE FROM "NewsCategories"
 WHERE "NewsId" = $1
 `
 
-func (q *Queries) DeleteNewsCategories(ctx context.Context, newsid int64) error {
-	_, err := q.db.ExecContext(ctx, deleteNewsCategories, newsid)
+func (q *Queries) DeleteCategories(ctx context.Context, newsid int64) error {
+	_, err := q.db.ExecContext(ctx, deleteCategories, newsid)
 	return err
 }
 
-const insertNewsCategories = `-- name: InsertNewsCategories :exec
+const insertCategories = `-- name: InsertCategories :exec
 INSERT INTO "NewsCategories" ("NewsId", "CategoryId")
 VALUES ($1, unnest($2::BIGINT []))
 `
 
-type InsertNewsCategoriesParams struct {
+type InsertCategoriesParams struct {
 	NewsId  int64   `json:"NewsId"`
 	Column2 []int64 `json:"column_2"`
 }
 
-func (q *Queries) InsertNewsCategories(ctx context.Context, arg InsertNewsCategoriesParams) error {
-	_, err := q.db.ExecContext(ctx, insertNewsCategories, arg.NewsId, pq.Array(arg.Column2))
+func (q *Queries) InsertCategories(ctx context.Context, arg InsertCategoriesParams) error {
+	_, err := q.db.ExecContext(ctx, insertCategories, arg.NewsId, pq.Array(arg.Column2))
 	return err
 }
 
-const listNews = `-- name: ListNews :many
+const list = `-- name: List :many
 SELECT n."Id",
     n."Title",
     n."Content",
     COALESCE(array_agg(nc."CategoryId"), '{}') AS "Categories"
 FROM "News" n
-    LEFT JOIN "NewsCategories" nc ON n."Id" = nc."NewsId"
+    JOIN "NewsCategories" nc ON n."Id" = nc."NewsId"
 GROUP BY n."Id",
     n."Title",
     n."Content"
+ORDER BY n."Id" DESC
 LIMIT $1 OFFSET $2
 `
 
-type ListNewsParams struct {
+type ListParams struct {
 	Limit  int32 `json:"limit"`
 	Offset int32 `json:"offset"`
 }
 
-type ListNewsRow struct {
+type ListRow struct {
 	Id         int64       `json:"Id"`
 	Title      string      `json:"Title"`
 	Content    string      `json:"Content"`
 	Categories interface{} `json:"Categories"`
 }
 
-func (q *Queries) ListNews(ctx context.Context, arg ListNewsParams) ([]ListNewsRow, error) {
-	rows, err := q.db.QueryContext(ctx, listNews, arg.Limit, arg.Offset)
+func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
+	rows, err := q.db.QueryContext(ctx, list, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListNewsRow
+	var items []ListRow
 	for rows.Next() {
-		var i ListNewsRow
+		var i ListRow
 		if err := rows.Scan(
 			&i.Id,
 			&i.Title,
@@ -89,20 +90,20 @@ func (q *Queries) ListNews(ctx context.Context, arg ListNewsParams) ([]ListNewsR
 	return items, nil
 }
 
-const updateNews = `-- name: UpdateNews :exec
+const update = `-- name: Update :exec
 UPDATE "News"
 SET "Title" = COALESCE(NULLIF($2, ''), "Title"),
     "Content" = COALESCE(NULLIF($3, ''), "Content")
 WHERE "Id" = $1
 `
 
-type UpdateNewsParams struct {
+type UpdateParams struct {
 	Id      int64       `json:"Id"`
 	Column2 interface{} `json:"column_2"`
 	Column3 interface{} `json:"column_3"`
 }
 
-func (q *Queries) UpdateNews(ctx context.Context, arg UpdateNewsParams) error {
-	_, err := q.db.ExecContext(ctx, updateNews, arg.Id, arg.Column2, arg.Column3)
+func (q *Queries) Update(ctx context.Context, arg UpdateParams) error {
+	_, err := q.db.ExecContext(ctx, update, arg.Id, arg.Column2, arg.Column3)
 	return err
 }

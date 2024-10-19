@@ -10,7 +10,8 @@ type Config struct {
 	ServerHost               string        `mapstructure:"ADDRESS"`                // адрес сервера
 	LogLevel                 string        `mapstructure:"LOG_LEVEL"`              // уровень логирования
 	MigrationPath            string        `mapstructure:"MIGRATION_PATH"`         // путь до папки с миграциями
-	PaginationLimit          int32         `mapstructure:"PAGINATION_LIMIT"`       // размер пагинации по-умолчанию
+	DefaultPaginationLimit   string        `mapstructure:"DEF_PAGINATION_LIMIT"`   // размер пагинации по-умолчанию
+	DefaultOffset            string        `mapstructure:"DEF_OFFSET"`             // размер смещения по-умолчанию
 	DatabaseUser             string        `mapstructure:"DB_USER"`                // имя пользователя датабазы
 	DatabasePassword         string        `mapstructure:"DB_PASSWORD"`            // пароль пользователя датабазы
 	DatabaseHost             string        `mapstructure:"DB_HOST"`                // адрес для подключения к датабазе

@@ -65,7 +65,7 @@ func Run() {
 	})
 
 	// Передаём подключение и настройки приложения нашим обработчикам.
-	queries := hd.NewHandlerQueries(connect)
+	queries := hd.NewHandlerQueries(connect, cfg)
 
 	//srv.Use(swagger.New())
 	logger.Zap.Debug("Running handlers.")
