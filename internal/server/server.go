@@ -12,6 +12,7 @@ import (
 
 	"github.com/Ra1nz0r/zero_agency/db"
 	"github.com/Ra1nz0r/zero_agency/internal/config"
+	hd "github.com/Ra1nz0r/zero_agency/internal/handlers"
 	"github.com/Ra1nz0r/zero_agency/internal/logger"
 	srv "github.com/Ra1nz0r/zero_agency/internal/services"
 	"github.com/gofiber/fiber/v3"
@@ -36,9 +37,6 @@ func Run() {
 	if errConn != nil {
 		logger.Zap.Fatal(fmt.Errorf("unable to create connection to database: %w", errConn))
 	}
-
-	// Передаём подключение и настройки приложения нашим обработчикам.
-	//queries := hs.NewHandlerQueries(connect, cfg)
 
 	logger.Zap.Debug("Checking the existence of a TABLE in the database.")
 	// Проверяем существование TABLE в базе данных.
@@ -66,14 +64,15 @@ func Run() {
 		IdleTimeout:   120 * time.Second,
 	})
 
+	// Передаём подключение и настройки приложения нашим обработчикам.
+	queries := hd.NewHandlerQueries(connect)
+
 	//srv.Use(swagger.New())
 	logger.Zap.Debug("Running handlers.")
 
-	// GET /api/register
-	srv.Get("/api/*", func(c fiber.Ctx) error {
-		msg := fmt.Sprintf("✋ %s", c.Params("*"))
-		return c.SendString(msg) // => ✋ register
-	})
+	// Ручки
+	srv.Get("/list", queries.ListNews)
+	srv.Post("/edit/:id", queries.EditNews)
 
 	logger.Zap.Info(fmt.Sprintf("Server is running on: '%s'", cfg.ServerHost))
 

@@ -10,6 +10,7 @@ import (
 )
 
 func Connect(cfg *config.Config) (*sql.DB, string, error) {
+	logger.Zap.Debug()
 	logger.Zap.Debug("Launching the `Connect` function.")
 
 	dbURL := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
@@ -32,11 +33,12 @@ func Connect(cfg *config.Config) (*sql.DB, string, error) {
 	db.SetMaxIdleConns(cfg.DatabaseMaxIdleConns)
 	db.SetConnMaxLifetime(cfg.DatabaseMaxLifetimeInMin * time.Minute)
 
-	logger.Zap.Debug("Let's check the server.")
+	logger.Zap.Debug("Let's ping connection to the database.")
 	if err := db.Ping(); err != nil {
 		return nil, "", err
 	}
 
-	logger.Zap.Debug(fmt.Sprintf("Connected to the PostgreSQL database using %s!", cfg.DatabaseDriver))
+	logger.Zap.Debug(fmt.Sprintf("Function `Connect` successful via `%s`.", cfg.DatabaseDriver))
+	logger.Zap.Debug()
 	return db, dbURL, nil
 }
