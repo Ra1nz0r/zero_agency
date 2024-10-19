@@ -1,4 +1,4 @@
-package db
+package server
 
 import (
 	"database/sql"
@@ -10,8 +10,7 @@ import (
 )
 
 func Connect(cfg *config.Config) (*sql.DB, string, error) {
-	logger.Zap.Debug()
-	logger.Zap.Debug("Launching the `Connect` function.")
+	logger.Zap.Debug("-> `Connect` - launching function.")
 
 	dbURL := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.DatabaseUser,
@@ -38,7 +37,7 @@ func Connect(cfg *config.Config) (*sql.DB, string, error) {
 		return nil, "", err
 	}
 
-	logger.Zap.Debug(fmt.Sprintf("Function `Connect` successful via `%s`.", cfg.DatabaseDriver))
-	logger.Zap.Debug()
+	logger.Zap.Debug(fmt.Sprintf("-> `Connect` - successful via `%s`.", cfg.DatabaseDriver))
+
 	return db, dbURL, nil
 }

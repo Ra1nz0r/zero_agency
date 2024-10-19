@@ -9,6 +9,7 @@ import (
 	cfg "github.com/Ra1nz0r/zero_agency/internal/config"
 	"github.com/Ra1nz0r/zero_agency/internal/logger"
 	"github.com/Ra1nz0r/zero_agency/internal/models"
+	srvs "github.com/Ra1nz0r/zero_agency/internal/services"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -28,10 +29,10 @@ func NewHandlerQueries(queries *sql.DB, cfg cfg.Config) *HandleQueries {
 
 // GET /list - список новостей с пагинацией
 func (hq *HandleQueries) ListNews(c fiber.Ctx) error {
-	logger.Zap.Debug()
-	logger.Zap.Debug("Calling the `ListNews` handler.")
 
-	limit, err := strconv.Atoi(c.Query("limit", hq.DefaultPaginationLimit))
+	logger.Zap.Debug("-> `ListNews` - calling handler.")
+
+	limit, err := srvs.StringToInt32WithOverflowCheck(c.Query("limit", hq.DefaultPaginationLimit))
 	if err != nil {
 		logger.Zap.Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -39,7 +40,7 @@ func (hq *HandleQueries) ListNews(c fiber.Ctx) error {
 		})
 	}
 
-	offset, err := strconv.Atoi(c.Query("offset", hq.DefaultOffset))
+	offset, err := srvs.StringToInt32WithOverflowCheck(c.Query("offset", hq.DefaultOffset))
 	if err != nil {
 		logger.Zap.Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -51,8 +52,8 @@ func (hq *HandleQueries) ListNews(c fiber.Ctx) error {
 
 	// Получаем список новостей из базы данных.
 	newsList, err := hq.List(c.Context(), db.ListParams{
-		Limit:  int32(limit),
-		Offset: int32(offset),
+		Limit:  limit,
+		Offset: offset,
 	})
 	if err != nil {
 		logger.Zap.Error(err.Error())
@@ -61,8 +62,7 @@ func (hq *HandleQueries) ListNews(c fiber.Ctx) error {
 		})
 	}
 
-	logger.Zap.Debug("Successful completion of the call to `ListNews`.")
-	logger.Zap.Debug()
+	logger.Zap.Debug("-> `ListNews` - successful called.")
 
 	return c.JSON(&models.WriteResponse{
 		Success: true,
@@ -72,8 +72,7 @@ func (hq *HandleQueries) ListNews(c fiber.Ctx) error {
 
 // POST /edit/:id - изменение новости по Id
 func (hq *HandleQueries) EditNews(c fiber.Ctx) error {
-	logger.Zap.Debug()
-	logger.Zap.Debug("Calling the `EditNews` handler.")
+	logger.Zap.Debug("-> `EditNews` - calling handler.")
 
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
@@ -94,7 +93,7 @@ func (hq *HandleQueries) EditNews(c fiber.Ctx) error {
 		})
 	}
 
-	logger.Zap.Debug("Beginning transaction.")
+	logger.Zap.Debug("+ Beginning transaction.")
 
 	// Начинаем выполнение транзакции.
 	tx, err := hq.Begin()
@@ -105,7 +104,7 @@ func (hq *HandleQueries) EditNews(c fiber.Ctx) error {
 	}
 	qtx := hq.WithTx(tx)
 
-	logger.Zap.Debug("Updating data in the database.")
+	logger.Zap.Debug("- Updating data in the database.")
 
 	// Обновление новости
 	err = qtx.Update(c.Context(), db.UpdateParams{
@@ -122,7 +121,7 @@ func (hq *HandleQueries) EditNews(c fiber.Ctx) error {
 
 	// Удаление старых категорий и вставка новых, если категории переданы в запросе.
 	if len(input.Categories) > 0 {
-		logger.Zap.Debug("Removing categories from the database.")
+		logger.Zap.Debug("- Removing categories from the database.")
 
 		if err := qtx.DeleteCategories(c.Context(), id); err != nil {
 			logger.Zap.Error(err.Error())
@@ -131,7 +130,7 @@ func (hq *HandleQueries) EditNews(c fiber.Ctx) error {
 			})
 		}
 
-		logger.Zap.Debug("Adding new categories to the database.")
+		logger.Zap.Debug("- Adding new categories to the database.")
 
 		err = qtx.InsertCategories(c.Context(), db.InsertCategoriesParams{
 			NewsId:  id,
@@ -153,10 +152,9 @@ func (hq *HandleQueries) EditNews(c fiber.Ctx) error {
 		})
 	}
 
-	logger.Zap.Debug("Transaction committed.")
+	logger.Zap.Debug("+ Transaction committed.")
 
-	logger.Zap.Debug("Successful completion of the call to `EditHandler`.")
-	logger.Zap.Debug()
+	logger.Zap.Debug("-> `EditNews` - successful called.")
 
 	return c.JSON(&models.WriteResponse{
 		Success: true,

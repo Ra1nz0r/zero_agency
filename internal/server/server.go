@@ -10,11 +10,14 @@ import (
 
 	"fmt"
 
-	"github.com/Ra1nz0r/zero_agency/db"
 	"github.com/Ra1nz0r/zero_agency/internal/config"
 	hd "github.com/Ra1nz0r/zero_agency/internal/handlers"
 	"github.com/Ra1nz0r/zero_agency/internal/logger"
+	"github.com/Ra1nz0r/zero_agency/internal/models"
 	srv "github.com/Ra1nz0r/zero_agency/internal/services"
+	"github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10/non-standard/validators"
+
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -33,7 +36,7 @@ func Run() {
 	}
 
 	logger.Zap.Debug("Connecting to the database.")
-	connect, dbURL, errConn := db.Connect(&cfg)
+	connect, dbURL, errConn := Connect(&cfg)
 	if errConn != nil {
 		logger.Zap.Fatal(fmt.Errorf("unable to create connection to database: %w", errConn))
 	}
@@ -53,15 +56,21 @@ func Run() {
 		}
 	}
 
+	// Создаём и конфигурируем валидатор.
+	v := validator.New()
+	v.RegisterValidation("notblank", validators.NotBlank) // для проверки, что строка только из пробелов
+
 	logger.Zap.Debug("Configuring and starting the server.")
+
 	// Конфигурируем и запускаем сервер.
 	srv := fiber.New(fiber.Config{
-		CaseSensitive: true,
-		StrictRouting: true,
-		AppName:       "News App v1.0.0",
-		ReadTimeout:   5 * time.Second,
-		WriteTimeout:  10 * time.Second,
-		IdleTimeout:   120 * time.Second,
+		CaseSensitive:   true,
+		StrictRouting:   true,
+		AppName:         "News App v1.0.0",
+		ReadTimeout:     5 * time.Second,
+		WriteTimeout:    10 * time.Second,
+		IdleTimeout:     120 * time.Second,
+		StructValidator: models.NewValidator(v),
 	})
 
 	// Передаём подключение и настройки приложения нашим обработчикам.
