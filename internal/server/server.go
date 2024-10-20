@@ -47,8 +47,11 @@ func Run() {
 	}
 
 	// Создаём и конфигурируем валидатор.
+	// Создаём notblank для проверки, что строка только из пробелов
 	v := validator.New()
-	v.RegisterValidation("notblank", validators.NotBlank) // для проверки, что строка только из пробелов
+	if err := v.RegisterValidation("notblank", validators.NotBlank); err != nil {
+		logger.Zap.Fatal(err.Error())
+	}
 
 	logger.Zap.Debug("Configuring and starting the server.")
 

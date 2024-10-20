@@ -75,5 +75,5 @@ func StringToInt32WithOverflowCheck(s string) (int32, error) {
 	}
 
 	// Возвращаем преобразованное значение
-	return int32(id64), nil
+	return int32(id64), nil //nolint:gosec
 }
