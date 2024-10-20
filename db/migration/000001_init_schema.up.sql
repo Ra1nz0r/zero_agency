@@ -8,5 +8,5 @@ CREATE TABLE IF NOT EXISTS "NewsCategories" (
     "CategoryId" BIGINT NOT NULL,
     PRIMARY KEY ("NewsId", "CategoryId")
 );
-CREATE INDEX ON News ("Title");
-CREATE INDEX ON NewsCategories ("CategoryId");
+CREATE INDEX ON "News" ("Title");
+CREATE INDEX ON "NewsCategories" ("CategoryId");

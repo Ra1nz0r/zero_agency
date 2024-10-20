@@ -21,6 +21,20 @@ func (q *Queries) DeleteCategories(ctx context.Context, newsid int64) error {
 	return err
 }
 
+const getNews = `-- name: GetNews :one
+SELECT "Id", "Title", "Content"
+FROM "News"
+WHERE "Id" = $1
+LIMIT 1
+`
+
+func (q *Queries) GetNews(ctx context.Context, id int64) (News, error) {
+	row := q.db.QueryRowContext(ctx, getNews, id)
+	var i News
+	err := row.Scan(&i.Id, &i.Title, &i.Content)
+	return i, err
+}
+
 const insertCategories = `-- name: InsertCategories :exec
 INSERT INTO "NewsCategories" ("NewsId", "CategoryId")
 VALUES ($1, unnest($2::BIGINT []))

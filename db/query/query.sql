@@ -21,3 +21,8 @@ WHERE "NewsId" = $1;
 -- name: InsertCategories :exec
 INSERT INTO "NewsCategories" ("NewsId", "CategoryId")
 VALUES ($1, unnest($2::BIGINT []));
+-- name: GetNews :one
+SELECT *
+FROM "News"
+WHERE "Id" = $1
+LIMIT 1;

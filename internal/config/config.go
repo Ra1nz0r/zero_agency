@@ -7,7 +7,8 @@ import (
 )
 
 type Config struct {
-	ServerHost             string `mapstructure:"ADDRESS"`              // адрес сервера
+	ServerHost             string `mapstructure:"ADDRESS"` // адрес сервера
+	ServerPort             string `mapstructure:"PORT"`
 	LogLevel               string `mapstructure:"LOG_LEVEL"`            // уровень логирования
 	MigrationPath          string `mapstructure:"MIGRATION_PATH"`       // путь до папки с миграциями
 	DefaultPaginationLimit string `mapstructure:"DEF_PAGINATION_LIMIT"` // размер пагинации по-умолчанию

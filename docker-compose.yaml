@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      ADDRESS: "${ADDRESS}"
+      PORT: "${PORT}"
+      LOG_LEVEL: "${LOG_LEVEL}"
+      MIGRATION_PATH: "${MIGRATION_PATH}"
+      DEF_PAGINATION_LIMIT: "${DEF_PAGINATION_LIMIT}"
+      DEF_OFFSET: "${DEF_OFFSET}"
+      DB_USER: "${DB_USER}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_HOST: "db"
+      DB_PORT: "${DB_PORT}"
+      DB_NAME: "${DB_NAME}"
+      DB_DRIVER: "${DB_DRIVER}"
+      DB_MAX_OPEN_CONNS: "${DB_MAX_OPEN_CONNS}"
+      DB_MAX_IDLE_CONNS: "${DB_MAX_IDLE_CONNS}"
+      DB_MAX_LIFETIME_IN_MIN: "${DB_MAX_LIFETIME_IN_MIN}"
+      SECRET_KEY_JWT: "${SECRET_KEY_JWT}"
+      JWT_EXPIRED_IN: "${JWT_EXPIRED_IN}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_NAME}"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:

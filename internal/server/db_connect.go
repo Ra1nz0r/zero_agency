@@ -2,14 +2,15 @@ package server
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
-	"github.com/Ra1nz0r/zero_agency/internal/config"
+	"fmt"
+
+	cfg "github.com/Ra1nz0r/zero_agency/internal/config"
 	"github.com/Ra1nz0r/zero_agency/internal/logger"
 )
 
-func Connect(cfg *config.Config) (*sql.DB, string, error) {
+func Connect(cfg *cfg.Config) (*sql.DB, error) {
 	logger.Zap.Debug("-> `Connect` - launching function.")
 
 	dbURL := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
@@ -24,7 +25,7 @@ func Connect(cfg *config.Config) (*sql.DB, string, error) {
 	logger.Zap.Debug("Opening connection to the database.")
 	db, err := sql.Open(cfg.DatabaseDriver, dbURL)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	logger.Zap.Debug("Setting up a connection pool.")
@@ -34,10 +35,10 @@ func Connect(cfg *config.Config) (*sql.DB, string, error) {
 
 	logger.Zap.Debug("Let's ping connection to the database.")
 	if err := db.Ping(); err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	logger.Zap.Debug(fmt.Sprintf("-> `Connect` - successful via `%s`.", cfg.DatabaseDriver))
 
-	return db, dbURL, nil
+	return db, nil
 }

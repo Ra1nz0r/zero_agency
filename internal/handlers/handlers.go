@@ -57,6 +57,16 @@ func (hq *HandleQueries) EditNews(c fiber.Ctx) error {
 		})
 	}
 
+	logger.Zap.Debug("Checking ID in database.")
+
+	// Проверяем существует ли переданное ID новости в базе данных.
+	if _, err := hq.GetNews(c.Context(), id); err != nil {
+		logger.Zap.Error(err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Entered ID does not exist in the database.",
+		})
+	}
+
 	logger.Zap.Debug("+ Beginning transaction.")
 
 	// Начинаем выполнение транзакции.
@@ -133,7 +143,7 @@ func (hq *HandleQueries) ListNews(c fiber.Ctx) error {
 	if err != nil {
 		logger.Zap.Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid limit",
+			"error": err.Error(),
 		})
 	}
 
@@ -141,7 +151,7 @@ func (hq *HandleQueries) ListNews(c fiber.Ctx) error {
 	if err != nil {
 		logger.Zap.Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid offset",
+			"error": err.Error(),
 		})
 	}
 

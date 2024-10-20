@@ -10,12 +10,12 @@ import (
 
 	"fmt"
 
-	"github.com/Ra1nz0r/zero_agency/internal/config"
+	cfg "github.com/Ra1nz0r/zero_agency/internal/config"
 	hd "github.com/Ra1nz0r/zero_agency/internal/handlers"
 	"github.com/Ra1nz0r/zero_agency/internal/logger"
 	"github.com/Ra1nz0r/zero_agency/internal/middleware"
 	"github.com/Ra1nz0r/zero_agency/internal/models"
-	srv "github.com/Ra1nz0r/zero_agency/internal/services"
+	"github.com/Ra1nz0r/zero_agency/internal/services"
 	"github.com/go-playground/validator/v10"
 	"github.com/go-playground/validator/v10/non-standard/validators"
 
@@ -26,7 +26,7 @@ import (
 func Run() {
 	logger.Zap.Debug()
 	// Загружаем переменные окружения из '.env' файла.
-	cfg, errLoad := config.LoadConfig(".")
+	cfg, errLoad := cfg.LoadConfig(".")
 	if errLoad != nil {
 		log.Fatal(fmt.Errorf("unable to load config: %w", errLoad))
 	}
@@ -37,24 +37,13 @@ func Run() {
 	}
 
 	logger.Zap.Debug("Connecting to the database.")
-	connect, dbURL, errConn := Connect(&cfg)
+	connect, errConn := Connect(&cfg)
 	if errConn != nil {
 		logger.Zap.Fatal(fmt.Errorf("unable to create connection to database: %w", errConn))
 	}
 
-	logger.Zap.Debug("Checking the existence of a TABLE in the database.")
-	// Проверяем существование TABLE в базе данных.
-	exists, errExs := srv.TableExists(connect, cfg.DatabaseName)
-	if errExs != nil {
-		logger.Zap.Fatal(fmt.Errorf("failed to check if TABLE exists: %w", errExs))
-	}
-
-	// Создаём TABLE, если он не существует.
-	if !exists {
-		logger.Zap.Debug(fmt.Sprintf("Creating TABLE in '%s' database.", cfg.DatabaseName))
-		if errRunMigr := srv.RunMigrations(dbURL, cfg.MigrationPath); errRunMigr != nil {
-			logger.Zap.Fatal(fmt.Errorf("failed to run migrations: %w", errConn))
-		}
+	if errRunMigr := services.RunMigrations(connect, cfg); errRunMigr != nil {
+		logger.Zap.Fatal(fmt.Errorf("failed to run migrations: %w", errRunMigr))
 	}
 
 	// Создаём и конфигурируем валидатор.
@@ -89,10 +78,12 @@ func Run() {
 	srv.Get("/list", queries.ListNews)
 	srv.Post("/edit/:id", queries.EditNews)
 
-	logger.Zap.Info(fmt.Sprintf("Server is running on: '%s'", cfg.ServerHost))
+	host := fmt.Sprintf("%s:%s", cfg.ServerHost, cfg.ServerPort)
+
+	logger.Zap.Info(fmt.Sprintf("Server is running on: '%s'", host))
 
 	go func() {
-		if errListn := srv.Listen(cfg.ServerHost); errListn != nil {
+		if errListn := srv.Listen(host); errListn != nil {
 			logger.Zap.Fatal(fmt.Errorf("HTTP server error: %w", errListn))
 		}
 		logger.Zap.Info("Stopped serving new connections.")

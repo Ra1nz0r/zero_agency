@@ -8,9 +8,11 @@ import (
 
 	"fmt"
 
+	cfg "github.com/Ra1nz0r/zero_agency/internal/config"
 	"github.com/Ra1nz0r/zero_agency/internal/models"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 )
 
 func GenerateJWT(lr models.LoginRequest, jwtSecret string, hours time.Duration) (string, error) {
@@ -30,16 +32,29 @@ func GenerateJWT(lr models.LoginRequest, jwtSecret string, hours time.Duration) 
 	return res, nil
 }
 
-// RunMigrations запускает миграцию Up по указанному пути.
-func RunMigrations(databaseURL, migrationPath string) error {
-	m, err := migrate.New(migrationPath, databaseURL)
+// RunMigrations запускает миграции, при повторном запуске программы, функция
+// будет проверять, были ли применены миграции ранее, и если все миграции уже выполнены,
+// она не будет применять их снова. Если в директории migration появились новые файлы миграций
+// с более высокими номерами (например, 000002_add_column.up.sql), библиотека применит их.
+func RunMigrations(db *sql.DB, cfg cfg.Config) error {
+	// Создаем драйвер миграции
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
 		return err
 	}
 
-	// Применение миграций
-	err = m.Up()
-	if err != nil && err != migrate.ErrNoChange {
+	// Настраиваем миграции (указываем путь к файлам миграций)
+	m, err := migrate.NewWithDatabaseInstance(
+		cfg.MigrationPath,
+		cfg.DatabaseName,
+		driver,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Запускаем миграции Up
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		return err
 	}
 
@@ -51,7 +66,7 @@ func StringToInt32WithOverflowCheck(s string) (int32, error) {
 	// Преобразуем строку в int64
 	id64, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid string to number conversion: %w", err)
+		return 0, err
 	}
 
 	// Проверяем, не выходит ли значение за пределы диапазона int32
@@ -61,21 +76,4 @@ func StringToInt32WithOverflowCheck(s string) (int32, error) {
 
 	// Возвращаем преобразованное значение
 	return int32(id64), nil
-}
-
-// TableExists проверяет существование table в базе данных.
-func TableExists(db *sql.DB, tableName string) (bool, error) {
-	var exists bool
-	query := `
-		SELECT EXISTS (
-			SELECT FROM pg_tables
-			WHERE schemaname = 'public' OR schemaname = 'private'
-			AND tablename = $1
-		);`
-	// Используем параметризованный запрос, где $1 — это плейсхолдер для tableName
-	err := db.QueryRow(query, tableName).Scan(&exists)
-	if err != nil {
-		return false, err
-	}
-	return exists, nil
 }
