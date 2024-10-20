@@ -4,11 +4,31 @@ import (
 	"database/sql"
 	"math"
 	"strconv"
+	"time"
 
 	"fmt"
 
+	"github.com/Ra1nz0r/zero_agency/internal/models"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/golang-migrate/migrate/v4"
 )
+
+func GenerateJWT(lr models.LoginRequest, jwtSecret string, hours time.Duration) (string, error) {
+	claims := jwt.MapClaims{
+		"username": lr.Username,
+		"password": lr.Password,
+		"exp":      time.Now().Add(hours).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	res, err := token.SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", err
+	}
+
+	return res, nil
+}
 
 // RunMigrations запускает миграцию Up по указанному пути.
 func RunMigrations(databaseURL, migrationPath string) error {
@@ -26,23 +46,6 @@ func RunMigrations(databaseURL, migrationPath string) error {
 	return nil
 }
 
-// TableExists проверяет существование table в базе данных.
-func TableExists(db *sql.DB, tableName string) (bool, error) {
-	var exists bool
-	query := `
-		SELECT EXISTS (
-			SELECT FROM pg_tables
-			WHERE schemaname = 'public' OR schemaname = 'private'
-			AND tablename = $1
-		);`
-	// Используем параметризованный запрос, где $1 — это плейсхолдер для tableName
-	err := db.QueryRow(query, tableName).Scan(&exists)
-	if err != nil {
-		return false, err
-	}
-	return exists, nil
-}
-
 // StringToInt32WithOverflowCheck преобразует строку в int32 с проверкой переполнения
 func StringToInt32WithOverflowCheck(s string) (int32, error) {
 	// Преобразуем строку в int64
@@ -58,4 +61,21 @@ func StringToInt32WithOverflowCheck(s string) (int32, error) {
 
 	// Возвращаем преобразованное значение
 	return int32(id64), nil
+}
+
+// TableExists проверяет существование table в базе данных.
+func TableExists(db *sql.DB, tableName string) (bool, error) {
+	var exists bool
+	query := `
+		SELECT EXISTS (
+			SELECT FROM pg_tables
+			WHERE schemaname = 'public' OR schemaname = 'private'
+			AND tablename = $1
+		);`
+	// Используем параметризованный запрос, где $1 — это плейсхолдер для tableName
+	err := db.QueryRow(query, tableName).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }

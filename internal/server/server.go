@@ -13,6 +13,7 @@ import (
 	"github.com/Ra1nz0r/zero_agency/internal/config"
 	hd "github.com/Ra1nz0r/zero_agency/internal/handlers"
 	"github.com/Ra1nz0r/zero_agency/internal/logger"
+	"github.com/Ra1nz0r/zero_agency/internal/middleware"
 	"github.com/Ra1nz0r/zero_agency/internal/models"
 	srv "github.com/Ra1nz0r/zero_agency/internal/services"
 	"github.com/go-playground/validator/v10"
@@ -78,6 +79,11 @@ func Run() {
 
 	//srv.Use(swagger.New())
 	logger.Zap.Debug("Running handlers.")
+
+	srv.Post("/login", queries.Login)
+
+	srv.Use("/list", middleware.JWTMiddleware(cfg.SecretKeyJWT))
+	srv.Use("/edit/:id", middleware.JWTMiddleware(cfg.SecretKeyJWT))
 
 	// Ручки
 	srv.Get("/list", queries.ListNews)
