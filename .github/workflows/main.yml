@@ -24,7 +24,8 @@ jobs:
 
       - name: Super-Linter
         uses: super-linter/super-linter/slim@v7.1.0
-
+        with:
+          args: --timeout=10m
         env:
           VALIDATE_MARKDOWN: false
           VALIDATE_SQLFLUFF: false
@@ -37,5 +38,4 @@ jobs:
           VALIDATE_ENV: false
           VALIDATE_YAML: false
           VALIDATE_CHECKOV: false
-          GOLANGCI_LINT_TIMEOUT: 5m
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
