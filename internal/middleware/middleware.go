@@ -24,7 +24,7 @@ func JWTMiddleware(jwtSecret string) fiber.Handler {
 			})
 		}
 
-		// Убираем префикс "Bearer " из заголовка Authorization, чтобы получить чистый JWT-токен.
+		// Убираем префикс "Bearer" из заголовка Authorization, чтобы получить чистый JWT-токен.
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
 		// Если после удаления префикса строка не изменилась значит формат токена неверный.
@@ -37,7 +37,7 @@ func JWTMiddleware(jwtSecret string) fiber.Handler {
 
 		logger.Zap.Debug("Parsing JWT token.")
 
-		// Парсим и проверием JWT-токен, используя переданный секретный ключ.
+		// Парсим и проверяем JWT-токен, используя переданный секретный ключ.
 		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 			// Проверяем, что токен был подписан с использованием HMAC-алгоритма (например, HS256).
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
