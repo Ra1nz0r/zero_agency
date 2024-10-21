@@ -20,62 +20,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/login": {
-            "post": {
-                "description": "Аутентифицирует пользователя на основе имени и пароля, и возвращает JWT токен при успешной аутентификации.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Аутентификация пользователя",
-                "parameters": [
-                    {
-                        "description": "Данные для входа (имя пользователя и пароль)",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "JWT токен",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Ошибка запроса: не удалось распарсить JSON или некорректные данные",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Ошибка сервера при генерации токена",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/news/edit/{id}": {
+        "/edit/{id}": {
             "post": {
                 "description": "Обновляет новость и её категории в базе данных по переданному ID. Если новость не найдена или данные некорректны, возвращается ошибка.",
                 "consumes": [
@@ -134,7 +79,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/news/list": {
+        "/list": {
             "get": {
                 "description": "Возвращает список новостей с возможностью ограничения числа результатов (limit) и смещения (offset). Если параметры не указаны, используются значения по умолчанию. При некорректных параметрах или ошибке базы данных возвращается соответствующее сообщение об ошибке.",
                 "consumes": [
@@ -179,6 +124,61 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Ошибка сервера при получении новостей.",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "description": "Аутентифицирует пользователя на основе имени и пароля, и возвращает JWT токен при успешной аутентификации.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Аутентификация пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные для входа (имя пользователя и пароль)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JWT токен",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка запроса: не удалось распарсить JSON или некорректные данные",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера при генерации токена",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {

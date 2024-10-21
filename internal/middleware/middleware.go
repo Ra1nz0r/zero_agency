@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/Ra1nz0r/zero_agency/internal/logger"
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 // JWTMiddleware возвращает middleware, который проверяет JWT-токен в заголовке Authorization.
 func JWTMiddleware(jwtSecret string) fiber.Handler {
-	return func(c fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
 		// Получаем значение заголовка "Authorization" из входящего запроса.
 		authHeader := c.Get("Authorization")
 

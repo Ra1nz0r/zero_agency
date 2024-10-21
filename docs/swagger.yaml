@@ -26,7 +26,7 @@ definitions:
         maxLength: 100
         type: string
     required:
-    - ID
+      - ID
     type: object
   models.LoginRequest:
     properties:
@@ -39,14 +39,14 @@ definitions:
         minLength: 1
         type: string
     required:
-    - Password
-    - Username
+      - Password
+      - Username
     type: object
   models.WriteResponse:
     properties:
       News:
         items:
-          $ref: '#/definitions/db.ListRow'
+          $ref: "#/definitions/db.ListRow"
         type: array
       Success:
         type: boolean
@@ -57,77 +57,42 @@ info:
     email: n52rus@gmail.com
     name: Artem Rylskii
     url: https://t.me/Rainz0r
-  description: REST API для управления новостями. Включает функции изменения новостей
+  description:
+    REST API для управления новостями. Включает функции изменения новостей
     и получения списка с поддержкой категорий.
   termsOfService: http://swagger.io/terms/
   title: News API
   version: "1.0"
 paths:
-  /auth/login:
+  /edit/{id}:
     post:
       consumes:
-      - application/json
-      description: Аутентифицирует пользователя на основе имени и пароля, и возвращает
-        JWT токен при успешной аутентификации.
-      parameters:
-      - description: Данные для входа (имя пользователя и пароль)
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.LoginRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: JWT токен
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: 'Ошибка запроса: не удалось распарсить JSON или некорректные
-            данные'
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Ошибка сервера при генерации токена
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Аутентификация пользователя
-      tags:
-      - auth
-  /news/edit/{id}:
-    post:
-      consumes:
-      - application/json
-      description: Обновляет новость и её категории в базе данных по переданному ID.
+        - application/json
+      description:
+        Обновляет новость и её категории в базе данных по переданному ID.
         Если новость не найдена или данные некорректны, возвращается ошибка.
       parameters:
-      - description: ID новости для обновления.
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Данные для обновления новости.
-        in: body
-        name: models.InputEditNews
-        required: true
-        schema:
-          $ref: '#/definitions/models.InputEditNews'
+        - description: ID новости для обновления.
+          in: path
+          name: id
+          required: true
+          type: integer
+        - description: Данные для обновления новости.
+          in: body
+          name: models.InputEditNews
+          required: true
+          schema:
+            $ref: "#/definitions/models.InputEditNews"
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: Успешное обновление новости.
           schema:
-            $ref: '#/definitions/models.WriteResponse'
+            $ref: "#/definitions/models.WriteResponse"
         "400":
-          description: Некорректный запрос. Например, если ID в URL не совпадает с
+          description:
+            Некорректный запрос. Например, если ID в URL не совпадает с
             ID в JSON или если ID не существует.
           schema:
             additionalProperties:
@@ -141,34 +106,36 @@ paths:
             type: object
       summary: Обновляет существующую новость.
       tags:
-      - news
-  /news/list:
+        - news
+  /list:
     get:
       consumes:
-      - application/json
-      description: Возвращает список новостей с возможностью ограничения числа результатов
+        - application/json
+      description:
+        Возвращает список новостей с возможностью ограничения числа результатов
         (limit) и смещения (offset). Если параметры не указаны, используются значения
         по умолчанию. При некорректных параметрах или ошибке базы данных возвращается
         соответствующее сообщение об ошибке.
       parameters:
-      - description: Максимальное количество новостей для получения. По умолчанию
-          — 10.
-        in: query
-        name: limit
-        type: integer
-      - description: Смещение для пагинации. По умолчанию — 0.
-        in: query
-        name: offset
-        type: integer
+        - description:
+            Максимальное количество новостей для получения. По умолчанию
+            — 10.
+          in: query
+          name: limit
+          type: integer
+        - description: Смещение для пагинации. По умолчанию — 0.
+          in: query
+          name: offset
+          type: integer
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: Список новостей.
           schema:
-            $ref: '#/definitions/models.WriteResponse'
+            $ref: "#/definitions/models.WriteResponse"
         "400":
-          description: 'Некорректный запрос: ошибка обработки параметров.'
+          description: "Некорректный запрос: ошибка обработки параметров."
           schema:
             additionalProperties:
               type: string
@@ -181,5 +148,45 @@ paths:
             type: object
       summary: Получение списка новостей с пагинацией.
       tags:
-      - news
+        - news
+  /login:
+    post:
+      consumes:
+        - application/json
+      description:
+        Аутентифицирует пользователя на основе имени и пароля, и возвращает
+        JWT токен при успешной аутентификации.
+      parameters:
+        - description: Данные для входа (имя пользователя и пароль)
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: "#/definitions/models.LoginRequest"
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: JWT токен
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description:
+            "Ошибка запроса: не удалось распарсить JSON или некорректные
+            данные"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Ошибка сервера при генерации токена
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Аутентификация пользователя
+      tags:
+        - auth
 swagger: "2.0"

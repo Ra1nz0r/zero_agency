@@ -16,10 +16,10 @@ import (
 	"github.com/Ra1nz0r/zero_agency/internal/middleware"
 	"github.com/Ra1nz0r/zero_agency/internal/models"
 	"github.com/Ra1nz0r/zero_agency/internal/services"
-	"github.com/go-playground/validator/v10"
 	"github.com/go-playground/validator/v10/non-standard/validators"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/contrib/swagger"
+	"github.com/gofiber/fiber/v2"
 )
 
 // Run запускает сервер.
@@ -48,32 +48,40 @@ func Run() {
 
 	// Создаём и конфигурируем валидатор.
 	// Создаём notblank для проверки, что строка только из пробелов
-	v := validator.New()
-	if err := v.RegisterValidation("notblank", validators.NotBlank); err != nil {
-		logger.Zap.Fatal(err.Error())
-	}
 
 	logger.Zap.Debug("Configuring and starting the server.")
 
 	// Конфигурируем и запускаем сервер.
 	srv := fiber.New(fiber.Config{
-		CaseSensitive:   true,
-		StrictRouting:   true,
-		AppName:         "News App v1.0.0",
-		ReadTimeout:     5 * time.Second,
-		WriteTimeout:    10 * time.Second,
-		IdleTimeout:     120 * time.Second,
-		StructValidator: models.NewValidator(v),
+		CaseSensitive: true,
+		StrictRouting: true,
+		AppName:       "News App v1.0.0",
+		ReadTimeout:   5 * time.Second,
+		WriteTimeout:  10 * time.Second,
+		IdleTimeout:   120 * time.Second,
 	})
 
 	// Передаём подключение и настройки приложения нашим обработчикам.
 	queries := hd.NewHandlerQueries(connect, cfg)
 
+	// Создаём и конфигурируем валидатор.
+	// Создаём notblank для проверки, что строка только из пробелов
+	valid := models.InitValidator()
+	if err := valid.RegisterValidation("notblank", validators.NotBlank); err != nil {
+		logger.Zap.Error(err.Error())
+
+	}
+
 	logger.Zap.Debug("Running handlers.")
+
+	srv.Use(swagger.New(swagger.Config{
+		FilePath: "./docs/swagger.json",
+		Path:     "swagger",
+		Title:    "Swagger API Docs",
+	}))
 
 	srv.Post("/login", queries.Login)
 
-	srv.Use("/list", middleware.JWTMiddleware(cfg.SecretKeyJWT))
 	srv.Use("/edit/:id", middleware.JWTMiddleware(cfg.SecretKeyJWT))
 
 	srv.Get("/list", queries.ListNews)

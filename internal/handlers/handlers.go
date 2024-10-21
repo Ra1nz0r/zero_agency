@@ -10,7 +10,7 @@ import (
 	"github.com/Ra1nz0r/zero_agency/internal/logger"
 	"github.com/Ra1nz0r/zero_agency/internal/models"
 	srvs "github.com/Ra1nz0r/zero_agency/internal/services"
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 type HandleQueries struct {
@@ -43,8 +43,8 @@ func NewHandlerQueries(queries *sql.DB, cfg cfg.Config) *HandleQueries {
 // @Success 200 {object} models.WriteResponse "Успешное обновление новости."
 // @Failure 400 {object} map[string]string "Некорректный запрос. Например, если ID в URL не совпадает с ID в JSON или если ID не существует."
 // @Failure 500 {object} map[string]string "Ошибка сервера при обновлении данных."
-// @Router /news/edit/{id} [post]
-func (hq *HandleQueries) EditNews(c fiber.Ctx) error {
+// @Router /edit/{id} [post]
+func (hq *HandleQueries) EditNews(c *fiber.Ctx) error {
 	logger.Zap.Debug("-> `EditNews` - calling handler.")
 
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -59,7 +59,7 @@ func (hq *HandleQueries) EditNews(c fiber.Ctx) error {
 
 	// Записываем данные из JSON в структуру.
 	var input models.InputEditNews
-	if err := c.Bind().Body(&input); err != nil {
+	if err := c.BodyParser(&input); err != nil {
 		logger.Zap.Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "invalid input",
@@ -70,6 +70,14 @@ func (hq *HandleQueries) EditNews(c fiber.Ctx) error {
 	if input.ID != id {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "ID in URL does not match ID in JSON",
+		})
+	}
+
+	//
+	if err := models.Validate.Struct(input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "validation error",
+			"message": err.Error(),
 		})
 	}
 
@@ -167,8 +175,8 @@ func (hq *HandleQueries) EditNews(c fiber.Ctx) error {
 // @Success 200 {object} models.WriteResponse "Список новостей."
 // @Failure 400 {object} map[string]string "Некорректный запрос: ошибка обработки параметров."
 // @Failure 500 {object} map[string]string "Ошибка сервера при получении новостей."
-// @Router /news/list [get]
-func (hq *HandleQueries) ListNews(c fiber.Ctx) error {
+// @Router /list [get]
+func (hq *HandleQueries) ListNews(c *fiber.Ctx) error {
 	logger.Zap.Debug("-> `ListNews` - calling handler.")
 
 	limit, err := srvs.StringToInt32WithOverflowCheck(c.Query("limit", hq.DefaultPaginationLimit))
@@ -224,16 +232,24 @@ func (hq *HandleQueries) ListNews(c fiber.Ctx) error {
 // @Success 200 {object} map[string]string "JWT токен"
 // @Failure 400 {object} map[string]string "Ошибка запроса: не удалось распарсить JSON или некорректные данные"
 // @Failure 500 {object} map[string]string "Ошибка сервера при генерации токена"
-// @Router /auth/login [post]
-func (hq *HandleQueries) Login(c fiber.Ctx) error {
+// @Router /login [post]
+func (hq *HandleQueries) Login(c *fiber.Ctx) error {
 	logger.Zap.Debug("-> `Login` - calling handler.")
 
 	// Записываем данные из JSON в структуру.
 	var lr models.LoginRequest
-	if err := c.Bind().Body(&lr); err != nil {
+	if err := c.BodyParser(&lr); err != nil {
 		logger.Zap.Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Cannot parse JSON",
+		})
+	}
+
+	//
+	if err := models.Validate.Struct(lr); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "validation error",
+			"message": err.Error(),
 		})
 	}
 

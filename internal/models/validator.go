@@ -4,17 +4,14 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type StructValidator struct {
-	validate *validator.Validate
+type XValidator struct {
+	*validator.Validate
 }
 
-func NewValidator(v *validator.Validate) *StructValidator {
-	return &StructValidator{
-		validate: v,
+var Validate = validator.New()
+
+func InitValidator() *XValidator {
+	return &XValidator{
+		Validate,
 	}
-}
-
-// Validator необходимо реализовать метод
-func (v *StructValidator) Validate(out any) error {
-	return v.validate.Struct(out)
 }

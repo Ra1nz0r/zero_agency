@@ -36,3 +36,8 @@ tasks:
     desc: "Run docker compose."
     cmds:
       - docker-compose up --build
+
+  g_lint: # название задачи для запуска
+    desc: "Run docker compose."
+    cmds:
+      - golangci-lint run
