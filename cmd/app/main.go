@@ -22,6 +22,14 @@ import (
 
 // @host localhost:7654
 // @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description !!! ВАЖНО !!! Введите токен в формате: Bearer <токен> !!! ВАЖНО !!!
+
+// @security BearerAuth
+
 func main() {
 	server.Run()
 }
