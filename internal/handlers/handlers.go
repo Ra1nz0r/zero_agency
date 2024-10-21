@@ -277,7 +277,7 @@ func (hq *HandleQueries) Login(c *fiber.Ctx) error {
 
 	logger.Zap.Debug("-> `Login` - successful called.")
 
-	// Возвращаем токен клиенту
+	// Возвращаем токен клиенту.
 	return c.JSON(fiber.Map{
 		"token": token,
 	})
