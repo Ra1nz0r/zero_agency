@@ -15,24 +15,29 @@ tasks:
   migrate_up: # название задачи для запуска
     desc: "Runs the migration file upwards."
     cmds:
-      - migrate -path db/migration -database "postgresql://postgres:admin@localhost:5432/news_service?sslmode=disable" -verbose up
+      - migrate -path db/migration -database "postgresql://postgres:admin@localhost:5432/postgres?sslmode=disable" -verbose up
 
   migrate_down: # название задачи для запуска
     desc: "Runs the migration file down."
     cmds:
-      - migrate -path db/migration -database "postgresql://postgres:admin@localhost:5432/news_service?sslmode=disable" -verbose down
+      - migrate -path db/migration -database "postgresql://postgres:admin@localhost:5432/postgres?sslmode=disable" -verbose down
 
   swag: # название задачи для запуска
     desc: "Initializes the creation of Swagger documentation."
     cmds:
       - swag init -q -g ./cmd/app/main.go
 
-  create_db: # название задачи для запуска
-    desc: "Creates a database."
+  sqlc_gen: # название задачи для запуска
+    desc: "Generates creation of SQLC files."
     cmds:
-      - sudo -i -u postgres createdb news_service
+      - sqlc generate
 
-  drop_db: # название задачи для запуска
-    desc: "Deletes the database."
+  d_compose: # название задачи для запуска
+    desc: "Run docker compose."
     cmds:
-      - sudo -i -u postgres dropdb news_service
+      - docker-compose up --build
+
+  g_lint: # название задачи для запуска
+    desc: "Run golangci-lint."
+    cmds:
+      - golangci-lint run
