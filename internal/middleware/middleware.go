@@ -12,6 +12,7 @@ import (
 // JWTMiddleware возвращает middleware, который проверяет JWT-токен в заголовке Authorization.
 func JWTMiddleware(jwtSecret string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		logger.Zap.Debug("-> `JWTMiddleware` - calling handler.")
 		// Получаем значение заголовка "Authorization" из входящего запроса.
 		authHeader := c.Get("Authorization")
 
@@ -34,6 +35,8 @@ func JWTMiddleware(jwtSecret string) fiber.Handler {
 			})
 		}
 
+		logger.Zap.Debug("Parsing JWT token.")
+
 		// Парсим и проверием JWT-токен, используя переданный секретный ключ.
 		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 			// Проверяем, что токен был подписан с использованием HMAC-алгоритма (например, HS256).
@@ -53,6 +56,8 @@ func JWTMiddleware(jwtSecret string) fiber.Handler {
 				"error": "Invalid or expired token",
 			})
 		}
+
+		logger.Zap.Debug("-> `JWTMiddleware` - successful called.")
 
 		return c.Next()
 	}

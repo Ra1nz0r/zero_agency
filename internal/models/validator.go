@@ -10,6 +10,7 @@ type XValidator struct {
 
 var Validate = validator.New()
 
+// InitValidator инициализирует валидатор.
 func InitValidator() *XValidator {
 	return &XValidator{
 		Validate,

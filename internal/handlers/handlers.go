@@ -73,7 +73,9 @@ func (hq *HandleQueries) EditNews(c *fiber.Ctx) error {
 		})
 	}
 
-	//
+	logger.Zap.Debug("Validating data from JSON.")
+
+	// Выполняем валидацию полей структуры input с помощью валидатора.
 	if err := models.Validate.Struct(input); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "validation error",
@@ -104,7 +106,7 @@ func (hq *HandleQueries) EditNews(c *fiber.Ctx) error {
 
 	logger.Zap.Debug("- Updating data in the database.")
 
-	// Обновление новости
+	// Обновляем новость.
 	err = qtx.Update(c.Context(), db.UpdateParams{
 		Id:      id,
 		Column2: input.Title,
@@ -121,6 +123,7 @@ func (hq *HandleQueries) EditNews(c *fiber.Ctx) error {
 	if len(input.Categories) > 0 {
 		logger.Zap.Debug("- Removing categories from the database.")
 
+		// Удаляем существующие категории новости.
 		if err := qtx.DeleteCategories(c.Context(), id); err != nil {
 			logger.Zap.Error(err.Error())
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -130,6 +133,7 @@ func (hq *HandleQueries) EditNews(c *fiber.Ctx) error {
 
 		logger.Zap.Debug("- Adding new categories to the database.")
 
+		// Добавляем новые категории к новости.
 		err = qtx.InsertCategories(c.Context(), db.InsertCategoriesParams{
 			NewsId:  id,
 			Column2: input.Categories,
@@ -179,6 +183,7 @@ func (hq *HandleQueries) EditNews(c *fiber.Ctx) error {
 func (hq *HandleQueries) ListNews(c *fiber.Ctx) error {
 	logger.Zap.Debug("-> `ListNews` - calling handler.")
 
+	// Преобразуем строку в число, с проверкой переполнения.
 	limit, err := srvs.StringToInt32WithOverflowCheck(c.Query("limit", hq.DefaultPaginationLimit))
 	if err != nil {
 		logger.Zap.Error(err.Error())
@@ -187,6 +192,7 @@ func (hq *HandleQueries) ListNews(c *fiber.Ctx) error {
 		})
 	}
 
+	// Преобразуем строку в число, с проверкой переполнения.
 	offset, err := srvs.StringToInt32WithOverflowCheck(c.Query("offset", hq.DefaultOffset))
 	if err != nil {
 		logger.Zap.Error(err.Error())
@@ -236,6 +242,8 @@ func (hq *HandleQueries) ListNews(c *fiber.Ctx) error {
 func (hq *HandleQueries) Login(c *fiber.Ctx) error {
 	logger.Zap.Debug("-> `Login` - calling handler.")
 
+	logger.Zap.Debug("Parsing JSON in struct.")
+
 	// Записываем данные из JSON в структуру.
 	var lr models.LoginRequest
 	if err := c.BodyParser(&lr); err != nil {
@@ -245,7 +253,9 @@ func (hq *HandleQueries) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	//
+	logger.Zap.Debug("Validating data from JSON.")
+
+	// Выполняем валидацию полей структуры lr с помощью валидатора.
 	if err := models.Validate.Struct(lr); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "validation error",
@@ -253,7 +263,10 @@ func (hq *HandleQueries) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	// Генерация JWT токена
+	logger.Zap.Debug("Generating new JWT token.")
+
+	// Генерируем JWT токен на основе имени пользователя (lr.Username),
+	// используя секретный ключ (hq.SecretKeyJWT) и время жизни токена (hq.JwtExpiresIn).
 	token, err := srvs.GenerateJWT(lr.Username, hq.SecretKeyJWT, hq.JwtExpiresIn)
 	if err != nil {
 		logger.Zap.Error(err.Error())
