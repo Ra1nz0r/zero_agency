@@ -1,0 +1,185 @@
+basePath: /
+definitions:
+  db.ListRow:
+    properties:
+      Categories: {}
+      Content:
+        type: string
+      Id:
+        type: integer
+      Title:
+        type: string
+    type: object
+  models.InputEditNews:
+    properties:
+      Categories:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      Content:
+        type: string
+      ID:
+        minimum: 1
+        type: integer
+      Title:
+        maxLength: 100
+        type: string
+    required:
+    - ID
+    type: object
+  models.LoginRequest:
+    properties:
+      Password:
+        maxLength: 20
+        minLength: 1
+        type: string
+      Username:
+        maxLength: 20
+        minLength: 1
+        type: string
+    required:
+    - Password
+    - Username
+    type: object
+  models.WriteResponse:
+    properties:
+      News:
+        items:
+          $ref: '#/definitions/db.ListRow'
+        type: array
+      Success:
+        type: boolean
+    type: object
+host: localhost:7654
+info:
+  contact:
+    email: n52rus@gmail.com
+    name: Artem Rylskii
+    url: https://t.me/Rainz0r
+  description: REST API для управления новостями. Включает функции изменения новостей
+    и получения списка с поддержкой категорий.
+  termsOfService: http://swagger.io/terms/
+  title: News API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Аутентифицирует пользователя на основе имени и пароля, и возвращает
+        JWT токен при успешной аутентификации.
+      parameters:
+      - description: Данные для входа (имя пользователя и пароль)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT токен
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'Ошибка запроса: не удалось распарсить JSON или некорректные
+            данные'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Ошибка сервера при генерации токена
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Аутентификация пользователя
+      tags:
+      - auth
+  /news/edit/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Обновляет новость и её категории в базе данных по переданному ID.
+        Если новость не найдена или данные некорректны, возвращается ошибка.
+      parameters:
+      - description: ID новости для обновления.
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные для обновления новости.
+        in: body
+        name: models.InputEditNews
+        required: true
+        schema:
+          $ref: '#/definitions/models.InputEditNews'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное обновление новости.
+          schema:
+            $ref: '#/definitions/models.WriteResponse'
+        "400":
+          description: Некорректный запрос. Например, если ID в URL не совпадает с
+            ID в JSON или если ID не существует.
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Ошибка сервера при обновлении данных.
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновляет существующую новость.
+      tags:
+      - news
+  /news/list:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список новостей с возможностью ограничения числа результатов
+        (limit) и смещения (offset). Если параметры не указаны, используются значения
+        по умолчанию. При некорректных параметрах или ошибке базы данных возвращается
+        соответствующее сообщение об ошибке.
+      parameters:
+      - description: Максимальное количество новостей для получения. По умолчанию
+          — 10.
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение для пагинации. По умолчанию — 0.
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список новостей.
+          schema:
+            $ref: '#/definitions/models.WriteResponse'
+        "400":
+          description: 'Некорректный запрос: ошибка обработки параметров.'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Ошибка сервера при получении новостей.
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получение списка новостей с пагинацией.
+      tags:
+      - news
+swagger: "2.0"

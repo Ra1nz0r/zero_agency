@@ -9,21 +9,34 @@ import (
 	"fmt"
 
 	cfg "github.com/Ra1nz0r/zero_agency/internal/config"
-	"github.com/Ra1nz0r/zero_agency/internal/models"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 )
 
-func GenerateJWT(lr models.LoginRequest, jwtSecret string, hours time.Duration) (string, error) {
+// GenerateJWT генерирует JWT (JSON Web Token) для предоставленного логина и пароля.
+//
+// Параметры:
+// - lr (models.LoginRequest): структура, содержащая логин и пароль пользователя.
+// - jwtSecret (string): секретный ключ для подписания токена.
+// - hours (time.Duration): количество времени, на которое токен будет действительным.
+//
+// Возвращает:
+// - (string): сгенерированный JWT в виде строки.
+// - (error): ошибка, если токен не удалось сгенерировать.
+func GenerateJWT(username, jwtSecret string, hours time.Duration) (string, error) {
+	// Создаем объект claims, который будет содержать полезную информацию (Payload) внутри JWT
 	claims := jwt.MapClaims{
-		"username": lr.Username,
-		"password": lr.Password,
+		"username": username,
 		"exp":      time.Now().Add(hours).Unix(),
 	}
 
+	// Создаем новый токен с использованием алгоритма HMAC (HS256) и переданных claims.
+	// jwt.SigningMethodHS256 - алгоритм для подписи токена.
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
+	// Подписываем токен с использованием секретного ключа (jwtSecret).
+	// Метод SignedString берет строковое представление секретного ключа (преобразованного в байты).
 	res, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
 		return "", err

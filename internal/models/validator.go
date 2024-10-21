@@ -14,7 +14,7 @@ func NewValidator(v *validator.Validate) *StructValidator {
 	}
 }
 
-// Validator needs to implement the Validate method
+// Validator необходимо реализовать метод
 func (v *StructValidator) Validate(out any) error {
 	return v.validate.Struct(out)
 }

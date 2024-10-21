@@ -69,7 +69,6 @@ func Run() {
 	// Передаём подключение и настройки приложения нашим обработчикам.
 	queries := hd.NewHandlerQueries(connect, cfg)
 
-	//srv.Use(swagger.New())
 	logger.Zap.Debug("Running handlers.")
 
 	srv.Post("/login", queries.Login)
@@ -77,7 +76,6 @@ func Run() {
 	srv.Use("/list", middleware.JWTMiddleware(cfg.SecretKeyJWT))
 	srv.Use("/edit/:id", middleware.JWTMiddleware(cfg.SecretKeyJWT))
 
-	// Ручки
 	srv.Get("/list", queries.ListNews)
 	srv.Post("/edit/:id", queries.EditNews)
 

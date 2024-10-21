@@ -1,0 +1,263 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "REST API для управления новостями. Включает функции изменения новостей и получения списка с поддержкой категорий.",
+        "title": "News API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Artem Rylskii",
+            "url": "https://t.me/Rainz0r",
+            "email": "n52rus@gmail.com"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:7654",
+    "basePath": "/",
+    "paths": {
+        "/auth/login": {
+            "post": {
+                "description": "Аутентифицирует пользователя на основе имени и пароля, и возвращает JWT токен при успешной аутентификации.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Аутентификация пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные для входа (имя пользователя и пароль)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JWT токен",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка запроса: не удалось распарсить JSON или некорректные данные",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера при генерации токена",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/news/edit/{id}": {
+            "post": {
+                "description": "Обновляет новость и её категории в базе данных по переданному ID. Если новость не найдена или данные некорректны, возвращается ошибка.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "news"
+                ],
+                "summary": "Обновляет существующую новость.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID новости для обновления.",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные для обновления новости.",
+                        "name": "models.InputEditNews",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.InputEditNews"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное обновление новости.",
+                        "schema": {
+                            "$ref": "#/definitions/models.WriteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос. Например, если ID в URL не совпадает с ID в JSON или если ID не существует.",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера при обновлении данных.",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/news/list": {
+            "get": {
+                "description": "Возвращает список новостей с возможностью ограничения числа результатов (limit) и смещения (offset). Если параметры не указаны, используются значения по умолчанию. При некорректных параметрах или ошибке базы данных возвращается соответствующее сообщение об ошибке.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "news"
+                ],
+                "summary": "Получение списка новостей с пагинацией.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Максимальное количество новостей для получения. По умолчанию — 10.",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение для пагинации. По умолчанию — 0.",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список новостей.",
+                        "schema": {
+                            "$ref": "#/definitions/models.WriteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос: ошибка обработки параметров.",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера при получении новостей.",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "db.ListRow": {
+            "type": "object",
+            "properties": {
+                "Categories": {},
+                "Content": {
+                    "type": "string"
+                },
+                "Id": {
+                    "type": "integer"
+                },
+                "Title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.InputEditNews": {
+            "type": "object",
+            "required": [
+                "ID"
+            ],
+            "properties": {
+                "Categories": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "Content": {
+                    "type": "string"
+                },
+                "ID": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "Title": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "models.LoginRequest": {
+            "type": "object",
+            "required": [
+                "Password",
+                "Username"
+            ],
+            "properties": {
+                "Password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
+                "Username": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                }
+            }
+        },
+        "models.WriteResponse": {
+            "type": "object",
+            "properties": {
+                "News": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.ListRow"
+                    }
+                },
+                "Success": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}
